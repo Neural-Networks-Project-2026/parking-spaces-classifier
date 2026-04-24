@@ -18,3 +18,16 @@ If you want to add a new package to the shared uv, write:
 ```bash
 uv add [name_of_package]
 ```
+## Working with dataset (for collaborators)
+In order to do the work with dataset you need to first log in to your kaggle account and create an API key for yourself (Settings -> API -> Generate token). It will start with "KGAT...", save it somewhere safe and copy to cliboard. 
+
+Then you need to save it to zsh, using 
+```bash
+echo 'export KAGGLE_API_TOKEN="[YOUR_TOKEN]"' >> ~/.zshrc
+source ~/.zshrc
+```
+Then you can just use the created makefile to have the dataset yourself
+```bash
+make fetch-data
+```
+
