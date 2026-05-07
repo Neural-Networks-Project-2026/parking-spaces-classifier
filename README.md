@@ -1,33 +1,80 @@
 # Parking-Spaces-Classifier
-It's a project, concluding the Neural Networks Course taken in University of Wroclaw in 2026. Creators of following project are: Kornel Orawczak, Marcin Mularczyk, Mateusz Matyskiel, Jan Lachowski. 
 
-## UV environment 
-In this project we will work on a shared uv environment. All of us worked on macos system, so all the commands are written with that in mind 
-### Initial setup 
-To first use uv, you need to download it using
-```bash
-brew install uv
+Final project for the Neural Networks course (University of Wrocław, 2026).
+
+Authors:
+Kornel Orawczak, Marcin Mularczyk, Mateusz Matyskiel, Jan Lachowski
+
+## 🚀 Quick Setup
+
+This project uses uv to manage dependencies and virtual environment.
+
+### 1. Prerequisites 
+
+- Python 3.14+
+- `uv` installed (`pip install uv`)
+
+### 2. Clone repository and install dependencies
+
 ```
-### Activating the env 
-In order to activate the project environment you simply write
-```bash
+git clone https://github.com/Neural-Networks-Project-2026/parking-spaces-classifier.git
+cd parking-spaces-classifier
+uv sync --dev
+uv run pre-commit install
+```
+
+### 3. Activating venv (optional)
+
+```
+# MacOS/Linux
 source .venv/bin/activate
-```
-### Adding a package (for collaborators)
-If you want to add a new package to the shared uv, write:
-```bash
-uv add [name_of_package]
-```
-## Working with dataset (for collaborators)
-In order to do the work with dataset you need to first log in to your kaggle account and create an API key for yourself (Settings -> API -> Generate token). It will start with "KGAT...", save it somewhere safe and copy to cliboard. 
 
-Then you need to save it to zsh, using 
-```bash
-echo 'export KAGGLE_API_TOKEN="[YOUR_TOKEN]"' >> ~/.zshrc
+# Windows
+source .venv/Scripts/activate
+```
+
+## 📦 Adding dependencies
+
+Production dependency:
+`uv add package_name`
+
+Dev dependency:
+`uv add --dev package_name`
+
+## 🧹 Code quality (Ruff)
+We use Ruff to keep the code clean and consistent.
+It automatically checks for mistakes and enforces a common style across the project.
+
+Basic ruff commands:
+- Check code:
+`uv run ruff check .`
+
+- Auto-fix issues:
+`uv run ruff check . --fix`
+
+- Format code:
+`uv run ruff format .`
+
+## 🔒 Pre-commit
+
+We use pre-commit hooks to automatically run checks before every commit. If your commit didn’t pass the first time, Ruff will often fix the issues automatically, so you just need to stage changes again and commit once more.
+
+## 📊 Dataset setup (Kaggle)
+
+1. Create API token:
+Kaggle → Settings → API → Create New Token
+
+2. Set environment variable:
+```
+# macOS / Linux
+echo 'export KAGGLE_API_TOKEN="YOUR_TOKEN_HERE"' >> ~/.zshrc
 source ~/.zshrc
-```
-Then you can just use the created makefile to have the dataset yourself
-```bash
-make fetch-data
-```
 
+# Windows
+setx KAGGLE_API_TOKEN "YOUR_TOKEN_HERE"
+```
+3. Download dataset:
+`uv run fetch-data`
+
+Data will be in:
+data/raw/
