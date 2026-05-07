@@ -64,10 +64,17 @@ if __name__ == "__main__":
     train_img_dir = "data/raw/train"
     train_ann_file = "data/raw/train/_annotations.coco.json"
 
-    train_dataset = PKLotDataset(root_dir=train_img_dir, annotation_file=train_ann_file)
+    train_dataset = PKLotDataset(
+        root_dir=train_img_dir,
+        annotation_file=train_ann_file,
+    )
 
     train_loader = DataLoader(
-        train_dataset, batch_size=4, shuffle=True, num_workers=2, collate_fn=collate_fn
+        train_dataset,
+        batch_size=4,
+        shuffle=True,
+        num_workers=2,
+        collate_fn=collate_fn,
     )
 
     for images, targets in train_loader:
