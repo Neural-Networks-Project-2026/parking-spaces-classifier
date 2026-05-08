@@ -34,7 +34,7 @@ def train():
         devices=1,
         log_every_n_steps=5,
         limit_train_batches=50,
-        accumulate_grad_batches=4,  
+        accumulate_grad_batches=8,  
         limit_val_batches=5      
     )
 
