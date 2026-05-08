@@ -32,6 +32,9 @@ MANIFEST
 *.manifest
 *.spec
 
+#Mac os file
+.DS_Store
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
@@ -70,6 +73,9 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+
+# Lightning
+.lightning_logs/*
 
 # PyBuilder
 .pybuilder/
