@@ -15,23 +15,29 @@ class BaseDetectorLitModule(pl.LightningModule):
     def forward(self, images: list[Tensor], targets: list[dict[str, Tensor]] | None = None):
         return self.model(images, targets)
 
-    def _shared_step(self, batch, stage: str) -> Tensor:
+    def training_step(self, batch, batch_idx: int) -> Tensor:
         images, targets = batch
+
         loss_dict = self.model(list(images), list(targets))
         loss = sum(loss_dict.values())
-        self.log(f"{stage}/loss", loss, prog_bar=True)
+        
+        self.log("train/loss", loss, prog_bar=True)
         for name, value in loss_dict.items():
-            self.log(f"{stage}/{name}", value, prog_bar=False)
+            self.log(f"train/{name}", value, prog_bar=False)
+            
         return loss
 
-    def training_step(self, batch, batch_idx: int) -> Tensor:
-        return self._shared_step(batch, "train")
-
     def validation_step(self, batch, batch_idx: int) -> None:
-        self._shared_step(batch, "val")
+        images, targets = batch
+
+        preds = self.model(list(images))
+        
+        # W przyszłości: liczenie metryki mAP z torchmetrics.detection
+        # self.map_metric(preds, targets)
 
     def test_step(self, batch, batch_idx: int) -> None:
-        self._shared_step(batch, "test")
+        images, targets = batch
+        preds = self.model(list(images))
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.lr)

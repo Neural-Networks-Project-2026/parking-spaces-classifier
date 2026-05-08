@@ -43,7 +43,12 @@ class PKLotDataset(Dataset):
             labels.append(ann["category_id"])
 
         target = {}
-        target["boxes"] = torch.tensor(boxes, dtype=torch.float32)
+        if len(boxes) > 0:
+            target["boxes"] = torch.tensor(boxes, dtype=torch.float32)
+        else:
+            # Wymagane przez torchvision: nawet pusty tensor musi mieć kształt [0, 4]
+            target["boxes"] = torch.empty((0, 4), dtype=torch.float32)
+            
         target["labels"] = torch.tensor(labels, dtype=torch.int64)
         target["image_id"] = torch.tensor([img_id])
 
@@ -61,8 +66,8 @@ def collate_fn(batch):
 
 
 if __name__ == "__main__":
-    train_img_dir = "data/raw/train"
-    train_ann_file = "data/raw/train/_annotations.coco.json"
+    train_img_dir = "data/raw/test"
+    train_ann_file = "data/raw/test/_annotations.coco.json"
 
     train_dataset = PKLotDataset(
         root_dir=train_img_dir,

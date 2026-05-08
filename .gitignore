@@ -75,7 +75,7 @@ instance/
 docs/_build/
 
 # Lightning
-.lightning_logs/*
+lightning_logs/*
 
 # PyBuilder
 .pybuilder/
