@@ -10,6 +10,7 @@ dependencies = [
     "loguru>=0.7.3",
     "numpy>=2.4.4",
     "pandas>=3.0.2",
+    "pytorch-lightning>=2.4.0",
     "scikit-learn>=1.8.0",
     "torch>=2.11.0",
     "torchvision>=0.26.0",
@@ -24,6 +25,10 @@ dev = [
 
 [tool.setuptools]
 package-dir = { "" = "src", "scripts" = "scripts" }
+
+[tool.setuptools.packages.find]
+where = ["src", "scripts"]
+include = ["parking_spaces_classifier*", "scripts*"]
 
 [tool.uv]
 package = true
