@@ -215,3 +215,4 @@ data/
 *.pt
 runs/
 outputs/
+data/yolo/
