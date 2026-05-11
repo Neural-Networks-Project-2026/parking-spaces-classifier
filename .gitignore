@@ -216,3 +216,4 @@ data/
 runs/
 outputs/
 data/yolo/
+data/yolo_smoke/
