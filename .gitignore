@@ -212,3 +212,11 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 data/
+*.pt
+runs/
+outputs/
+data/yolo/
+data/yolo_smoke/
+data/yolo_benchmark/
+data/yolo_overfit/
+.DS_Store
