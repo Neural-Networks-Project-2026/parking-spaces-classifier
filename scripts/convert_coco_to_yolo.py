@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any
 
 CLASS_MAPPING = {
-    1: 0,  # space-empty -> space-empty
-    2: 1,  # space-occupied -> space-occupied
+    1: 0,  # space-empty
+    2: 1,  # space-occupied
 }
 
 YOLO_NAMES = {

@@ -7,7 +7,7 @@ from pathlib import Path
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
-from parking_spaces_classifier.datasets.dataset import PKLotDataset, collate_fn
+from datasets.dataset import PKLotDataset, collate_fn
 
 
 @dataclass
