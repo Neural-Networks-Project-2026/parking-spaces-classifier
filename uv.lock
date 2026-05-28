@@ -1684,6 +1684,7 @@ dependencies = [
     { name = "pytorch-lightning" },
     { name = "scikit-learn" },
     { name = "torch" },
+    { name = "torchmetrics" },
     { name = "torchvision" },
     { name = "ultralytics" },
 ]
@@ -1705,6 +1706,7 @@ requires-dist = [
     { name = "pytorch-lightning", specifier = ">=2.4.0" },
     { name = "scikit-learn", specifier = ">=1.8.0" },
     { name = "torch", specifier = ">=2.11.0" },
+    { name = "torchmetrics", specifier = ">=1.9.0" },
     { name = "torchvision", specifier = ">=0.26.0" },
     { name = "ultralytics", specifier = ">=8.4.48" },
 ]
