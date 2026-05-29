@@ -67,6 +67,9 @@ class SimpleUNetCenterNet(nn.Module):
             nn.Conv2d(64, 2, kernel_size=1)
         )
 
+        # Głowa offsetu, potrzebna do tego aby gdy pomniejszamy obrazek (enkoder)
+        # a potem go powiększamy (dekoder), to ona ma za zadanie sprawić by predicty
+        # się nie rozjechały na boki
         self.head_offset = nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),

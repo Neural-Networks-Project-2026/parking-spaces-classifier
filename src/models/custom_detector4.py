@@ -63,27 +63,20 @@ class AdvancedCenterNet(nn.Module):
         
         self.add_coords = AddCoords()
         
-        # ------------------------
-        # KODER 
-        # Wejście ma teraz 5 kanałów (R, G, B, CoordX, CoordY)
-        # ------------------------
+        # Enkoder 5 kanałowy
         self.inc = SEResidualBlock(5, 64)
         
         self.down1 = nn.Sequential(nn.MaxPool2d(2), SEResidualBlock(64, 128))
         self.down2 = nn.Sequential(nn.MaxPool2d(2), SEResidualBlock(128, 256))
 
-        # ------------------------
-        # DEKODER 
-        # ------------------------
+        # dekoder
         self.up1 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         self.conv_up1 = SEResidualBlock(256 + 128, 128)
         
         self.up2 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         self.conv_up2 = SEResidualBlock(128 + 64, 64)
 
-        # ------------------------
-        # GŁOWY DETEKCYJNE
-        # ------------------------
+       
         self.head_heatmap = nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
