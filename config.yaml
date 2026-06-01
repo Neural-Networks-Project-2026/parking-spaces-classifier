@@ -1,0 +1,129 @@
+# pytorch_lightning==2.6.1
+seed_everything: 42
+trainer:
+  accelerator: mps
+  strategy: auto
+  devices: 1
+  num_nodes: 1
+  precision: null
+  logger:
+    class_path: pytorch_lightning.loggers.WandbLogger
+    init_args:
+      name: run-cli-v1
+      save_dir: .
+      version: null
+      offline: false
+      dir: null
+      id: null
+      anonymous: null
+      project: PKLot-CenterNet-Lightning
+      log_model: false
+      experiment: null
+      prefix: ''
+      checkpoint_name: null
+      add_file_policy: mutable
+      entity: null
+      notes: null
+      tags: null
+      config: null
+      config_exclude_keys: null
+      config_include_keys: null
+      allow_val_change: null
+      group: null
+      job_type: null
+      mode: null
+      force: null
+      reinit: null
+      resume: null
+      resume_from: null
+      fork_from: null
+      save_code: null
+      tensorboard: null
+      sync_tensorboard: null
+      monitor_gym: null
+      settings: null
+  callbacks:
+  - class_path: pytorch_lightning.callbacks.ModelCheckpoint
+    init_args:
+      dirpath: null
+      filename: centernet-epoch{epoch:02d}-val_loss{val/loss:.2f}
+      monitor: val/loss
+      verbose: false
+      save_last: true
+      save_top_k: 3
+      save_on_exception: false
+      save_weights_only: false
+      mode: min
+      auto_insert_metric_name: false
+      every_n_train_steps: null
+      train_time_interval: null
+      every_n_epochs: null
+      save_on_train_epoch_end: null
+      enable_version_counter: true
+  - class_path: pytorch_lightning.callbacks.LearningRateMonitor
+    init_args:
+      logging_interval: epoch
+      log_momentum: false
+      log_weight_decay: false
+  fast_dev_run: false
+  max_epochs: 5
+  min_epochs: null
+  max_steps: 1
+  min_steps: null
+  max_time: null
+  limit_train_batches: null
+  limit_val_batches: 0
+  limit_test_batches: null
+  limit_predict_batches: null
+  overfit_batches: 0.0
+  val_check_interval: null
+  check_val_every_n_epoch: 1
+  num_sanity_val_steps: null
+  log_every_n_steps: 10
+  enable_checkpointing: null
+  enable_progress_bar: null
+  enable_model_summary: null
+  accumulate_grad_batches: 1
+  gradient_clip_val: null
+  gradient_clip_algorithm: null
+  deterministic: null
+  benchmark: null
+  inference_mode: true
+  use_distributed_sampler: true
+  profiler: null
+  detect_anomaly: false
+  barebones: false
+  plugins: null
+  sync_batchnorm: false
+  reload_dataloaders_every_n_epochs: 0
+  default_root_dir: null
+  enable_autolog_hparams: true
+  model_registry: null
+model:
+  model:
+    class_path: src.models.custom_detector.SimpleUNetCenterNet
+    init_args:
+      num_classes: 2
+  lr: 0.0003
+  epochs: 5
+data:
+  train:
+    root_dir: data/processed/train
+    annotations: data/processed/train/_annotations.coco.json
+  val:
+    root_dir: data/processed/valid
+    annotations: data/processed/valid/_annotations.coco.json
+  test:
+    root_dir: data/processed/test
+    annotations: data/processed/test/_annotations.coco.json
+  batch_size: 8
+  num_workers: 0
+  train_transforms: null
+  val_transforms: null
+  test_transforms: null
+  train_subset_size: 1000
+  val_subset_size: 100
+optimizer: null
+lr_scheduler: null
+ckpt_path: null
+weights_only: null

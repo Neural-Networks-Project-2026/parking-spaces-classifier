@@ -77,6 +77,10 @@ docs/_build/
 
 # Lightning
 .lightning_logs/*
+/checkpoints
+
+#wandb
+wandb/
 
 # PyBuilder
 .pybuilder/

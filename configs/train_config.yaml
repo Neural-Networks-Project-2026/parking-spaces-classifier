@@ -1,0 +1,47 @@
+seed_everything: 42
+trainer:
+  max_epochs: 20
+  accelerator: "mps"
+  devices: 1
+  precision: "16-mixed"
+  log_every_n_steps: 10
+  logger:
+    class_path: pytorch_lightning.loggers.WandbLogger
+    init_args:
+      project: "PKLot-CenterNet-Lightning"
+      name: "run-custom-detector-full"
+      save_dir: "checkpoints/"
+  callbacks:
+    - class_path: pytorch_lightning.callbacks.ModelCheckpoint
+      init_args:
+        filename: "centernet-epoch{epoch:02d}-val_loss{val/loss:.2f}"
+        monitor: "val/loss"
+        mode: "min"
+        save_top_k: 3
+        save_last: true
+        auto_insert_metric_name: false
+    - class_path: pytorch_lightning.callbacks.LearningRateMonitor
+      init_args:
+        logging_interval: "epoch"
+model:
+  lr: 0.0003
+  epochs: 20
+  model:
+    class_path: src.models.custom_detector.SimpleUNetCenterNet
+    init_args:
+      num_classes: 2
+data:
+  batch_size: 8
+  num_workers: 8
+  persistent_workers: true
+  train_subset_size: 
+  val_subset_size: 
+  train:
+    root_dir: data/processed/train
+    annotations: data/processed/train/_annotations.coco.json
+  val:
+    root_dir: data/processed/valid
+    annotations: data/processed/valid/_annotations.coco.json
+  test:
+    root_dir: data/processed/test
+    annotations: data/processed/test/_annotations.coco.json

@@ -5,6 +5,10 @@ import torch
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import functional as F
+from torchvision.transforms import v2
+from torchvision import tv_tensors
+
+from src.models.custom_detector import create_centernet_targets
 
 
 class PKLotDataset(Dataset):
@@ -43,7 +47,11 @@ class PKLotDataset(Dataset):
             labels.append(ann["category_id"])
 
         target = {}
-        target["boxes"] = torch.tensor(boxes, dtype=torch.float32)
+        target["boxes"] = tv_tensors.BoundingBoxes(
+            boxes, format="XYXY", canvas_size=(image.height, image.width)
+        ) if boxes else tv_tensors.BoundingBoxes(
+            torch.empty((0, 4), dtype=torch.float32), format="XYXY", canvas_size=(image.height, image.width)
+        )
         target["labels"] = torch.tensor(labels, dtype=torch.int64)
         target["image_id"] = torch.tensor([img_id])
 
@@ -51,33 +59,55 @@ class PKLotDataset(Dataset):
             image, target = self.transforms(image, target)
         else:
             image = F.to_tensor(image)
+            
+        _, H, W = image.shape
+        hm, wh, offset, reg_mask = create_centernet_targets(
+            target["boxes"], target["labels"], H, W, torch.device("cpu")
+        )
+        
+        target["heatmap"] = hm
+        target["wh"] = wh
+        target["offset"] = offset
+        target["reg_mask"] = reg_mask
 
         return image, target
 
 
-# Funkcja zapobiegająca błędowi sklejania tensorów o różnym rozmiarze
 def collate_fn(batch):
     return tuple(zip(*batch, strict=False))
 
+def get_transform(is_train=True):
+    transforms = [
+        v2.ToImage(),
+        v2.Resize(size=(360, 640), antialias=True),
+    ]
+    if is_train:
+        transforms.extend([
+            v2.RandomHorizontalFlip(p=0.5),
+            v2.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1)
+        ])
+    transforms.append(v2.ToDtype(torch.float32, scale=True))
+    return v2.Compose(transforms)
 
-if __name__ == "__main__":
-    train_img_dir = "data/raw/train"
-    train_ann_file = "data/raw/train/_annotations.coco.json"
 
-    train_dataset = PKLotDataset(
-        root_dir=train_img_dir,
-        annotation_file=train_ann_file,
-    )
+# if __name__ == "__main__":
+#     train_img_dir = "data/raw/train"
+#     train_ann_file = "data/raw/train/_annotations.coco.json"
 
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=4,
-        shuffle=True,
-        num_workers=2,
-        collate_fn=collate_fn,
-    )
+#     train_dataset = PKLotDataset(
+#         root_dir=train_img_dir,
+#         annotation_file=train_ann_file,
+#     )
 
-    for images, targets in train_loader:
-        print(f"Kształt zdjęcia: {images[0].shape}")
-        print(f"Ilość obiektów na pierwszym zdjęciu: {len(targets[0]['labels'])}")
-        break
+#     train_loader = DataLoader(
+#         train_dataset,
+#         batch_size=4,
+#         shuffle=True,
+#         num_workers=2,
+#         collate_fn=collate_fn,
+#     )
+
+#     for images, targets in train_loader:
+#         print(f"Kształt zdjęcia: {images[0].shape}")
+#         print(f"Ilość obiektów na pierwszym zdjęciu: {len(targets[0]['labels'])}")
+#         break
