@@ -45,7 +45,6 @@ class CenterNetLitModule(pl.LightningModule):
         self.save_hyperparameters(ignore=['model'])
         self.model = model
         
-        # Inicjalizacja metryk
         self.map_metric = MeanAveragePrecision(box_format='xyxy', class_metrics=True, max_detection_thresholds=[10, 100, 1000])
 
     def forward(self, images: Tensor):
@@ -54,8 +53,6 @@ class CenterNetLitModule(pl.LightningModule):
     def _shared_step(self, batch, stage: str):
         images, targets = batch
         
-        # Pytorch Lightning przekazuje listę tensorów w batchu jeśli użyjemy własnego collate_fn.
-        # Images to krotka/lista tensorów (C, H, W). Sklejamy ją:
         images_tensor = torch.stack(list(images)).to(self.device)
         B, C, H, W = images_tensor.shape
         gt_hm = torch.stack([t["heatmap"] for t in targets]).to(self.device)
