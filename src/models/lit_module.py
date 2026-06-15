@@ -62,13 +62,14 @@ class CenterNetLitModule(pl.LightningModule):
         gt_wh = torch.stack([t["wh"] for t in targets]).to(self.device)
         gt_offset = torch.stack([t["offset"] for t in targets]).to(self.device)
         reg_mask = torch.stack([t["reg_mask"] for t in targets]).to(self.device)
+        ignore_mask = torch.stack([t["ignore_mask"] for t in targets]).to(self.device)
 
         preds = self(images_tensor)
         pred_hm = preds["heatmap"]
         pred_wh = preds["wh"]
         pred_offset = preds["offset"]
 
-        hm_loss = focal_loss(pred_hm, gt_hm)
+        hm_loss = focal_loss(pred_hm, gt_hm, ignore_mask)
         wh_loss = reg_l1_loss(pred_wh, gt_wh, reg_mask)
         offset_loss = reg_l1_loss(pred_offset, gt_offset, reg_mask)
 
@@ -126,7 +127,7 @@ class CenterNetLitModule(pl.LightningModule):
             lr=self.hparams.lr,
             weight_decay=0.0005,
         )
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.hparams.epochs)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.hparams.epochs+2)
         return [optimizer], [scheduler]
 
 

@@ -9,7 +9,7 @@ trainer:
     class_path: pytorch_lightning.loggers.WandbLogger
     init_args:
       project: "PKLot-CenterNet-Lightning"
-      name: "run-custom-detector-full"
+      name: "run-custom-detector-full-raw"
       save_dir: "checkpoints/"
   callbacks:
     - class_path: pytorch_lightning.callbacks.ModelCheckpoint

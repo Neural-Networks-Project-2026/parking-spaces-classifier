@@ -54,6 +54,12 @@ class PKLotDataset(Dataset):
         )
         target["labels"] = torch.tensor(labels, dtype=torch.int64)
         target["image_id"] = torch.tensor([img_id])
+        
+        valid_area = img_info.get("valid_area", [0, 0, image.width, image.height])
+        target["valid_area"] = tv_tensors.BoundingBoxes(
+            torch.tensor([valid_area], dtype=torch.float32), 
+            format="XYXY", canvas_size=(image.height, image.width)
+        )
 
         if self.transforms is not None:
             image, target = self.transforms(image, target)
@@ -61,14 +67,15 @@ class PKLotDataset(Dataset):
             image = F.to_tensor(image)
             
         _, H, W = image.shape
-        hm, wh, offset, reg_mask = create_centernet_targets(
-            target["boxes"], target["labels"], H, W, torch.device("cpu")
+        hm, wh, offset, reg_mask, ignore_mask = create_centernet_targets(
+            target["boxes"], target["labels"], H, W, torch.device("cpu"), valid_area=target["valid_area"][0]
         )
         
         target["heatmap"] = hm
         target["wh"] = wh
         target["offset"] = offset
         target["reg_mask"] = reg_mask
+        target["ignore_mask"] = ignore_mask
 
         return image, target
 
@@ -79,7 +86,6 @@ def collate_fn(batch):
 def get_transform(is_train=True):
     transforms = [
         v2.ToImage(),
-        v2.Resize(size=(360, 640), antialias=True),
     ]
     if is_train:
         transforms.extend([

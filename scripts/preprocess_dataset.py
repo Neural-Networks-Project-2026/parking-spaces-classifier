@@ -22,6 +22,9 @@ def process_subset(subset_name: str, padding: int = 20):
     for ann in coco["annotations"]:
         img_to_anns[ann["image_id"]].append(ann)
         
+    TARGET_W = 640
+    TARGET_H = 360
+        
     for img_info in coco["images"]:
         img_id = img_info["id"]
         file_name = img_info["file_name"]
@@ -32,9 +35,30 @@ def process_subset(subset_name: str, padding: int = 20):
             
         anns = img_to_anns[img_id]
         
+        orig_width = img_info["width"]
+        orig_height = img_info["height"]
+        
+        # Calculate scale and padding for letterbox
+        scale = min(TARGET_W / orig_width, TARGET_H / orig_height)
+        new_w = int(orig_width * scale)
+        new_h = int(orig_height * scale)
+        
+        pad_x = (TARGET_W - new_w) // 2
+        pad_y = (TARGET_H - new_h) // 2
+        
+        # Process image
+        image = Image.open(img_path).convert("RGB")
+        resized_image = image.resize((new_w, new_h), Image.Resampling.LANCZOS)
+        
+        final_image = Image.new("RGB", (TARGET_W, TARGET_H), (0, 0, 0))
+        final_image.paste(resized_image, (pad_x, pad_y))
+        final_image.save(processed_dir / file_name)
+        
+        img_info["width"] = TARGET_W
+        img_info["height"] = TARGET_H
+        
         if not anns:
-            image = Image.open(img_path).convert("RGB")
-            image.save(processed_dir / file_name)
+            img_info["valid_area"] = [0, 0, TARGET_W, TARGET_H]
             continue
             
         min_x = float('inf')
@@ -44,31 +68,28 @@ def process_subset(subset_name: str, padding: int = 20):
         
         for ann in anns:
             x, y, w, h = ann["bbox"]
-            min_x = min(min_x, x)
-            min_y = min(min_y, y)
-            max_x = max(max_x, x + w)
-            max_y = max(max_y, y + h)
             
-        orig_width = img_info["width"]
-        orig_height = img_info["height"]
+            # Scale bounding boxes
+            new_x = x * scale + pad_x
+            new_y = y * scale + pad_y
+            new_box_w = w * scale
+            new_box_h = h * scale
+            
+            ann["bbox"] = [new_x, new_y, new_box_w, new_box_h]
+            
+            # Find bounds for valid_area
+            min_x = min(min_x, new_x)
+            min_y = min(min_y, new_y)
+            max_x = max(max_x, new_x + new_box_w)
+            max_y = max(max_y, new_y + new_box_h)
+            
+        scaled_padding = padding * scale
+        valid_min_x = max(0, min_x - scaled_padding)
+        valid_min_y = max(0, min_y - scaled_padding)
+        valid_max_x = min(TARGET_W, max_x + scaled_padding)
+        valid_max_y = min(TARGET_H, max_y + scaled_padding)
         
-        crop_min_x = max(0, int(min_x - padding))
-        crop_min_y = max(0, int(min_y - padding))
-        crop_max_x = min(orig_width, int(max_x + padding))
-        crop_max_y = min(orig_height, int(max_y + padding))
-        
-        image = Image.open(img_path).convert("RGB")
-        cropped_image = image.crop((crop_min_x, crop_min_y, crop_max_x, crop_max_y))
-        cropped_image.save(processed_dir / file_name)
-        
-        img_info["width"] = cropped_image.width
-        img_info["height"] = cropped_image.height
-        
-        for ann in anns:
-            x, y, w, h = ann["bbox"]
-            new_x = max(0, x - crop_min_x)
-            new_y = max(0, y - crop_min_y)
-            ann["bbox"] = [new_x, new_y, w, h]
+        img_info["valid_area"] = [valid_min_x, valid_min_y, valid_max_x, valid_max_y]
             
     out_ann_file = processed_dir / "_annotations.coco.json"
     with open(out_ann_file, "w") as f:

@@ -101,7 +101,7 @@ class SimpleUNetCenterNet(nn.Module):
 
         return {"heatmap": heatmap, "wh": wh, "offset": offset}
 
-def create_centernet_targets(boxes, labels, output_h, output_w, device):
+def create_centernet_targets(boxes, labels, output_h, output_w, device, valid_area=None):
     num_classes = 2
     hm = torch.zeros((num_classes, output_h, output_w), dtype=torch.float32, device=device)
     wh = torch.zeros((2, output_h, output_w), dtype=torch.float32, device=device)
@@ -109,9 +109,23 @@ def create_centernet_targets(boxes, labels, output_h, output_w, device):
     # NOWOŚĆ: tensor pod przesunięcia sub-pikselowe
     offset = torch.zeros((2, output_h, output_w), dtype=torch.float32, device=device)
     reg_mask = torch.zeros((output_h, output_w), dtype=torch.float32, device=device) 
+    
+    ignore_mask = torch.zeros((output_h, output_w), dtype=torch.float32, device=device)
+    if valid_area is not None:
+        vx1, vy1, vx2, vy2 = valid_area
+        vx1, vy1, vx2, vy2 = int(vx1.item()), int(vy1.item()), int(vx2.item()), int(vy2.item())
+        
+        vx1 = max(0, vx1)
+        vy1 = max(0, vy1)
+        vx2 = min(output_w, vx2)
+        vy2 = min(output_h, vy2)
+        if vx2 > vx1 and vy2 > vy1:
+            ignore_mask[vy1:vy2, vx1:vx2] = 1.0
+    else:
+        ignore_mask += 1.0
 
     if boxes.numel() == 0:
-        return hm, wh, offset, reg_mask
+        return hm, wh, offset, reg_mask, ignore_mask
 
     for box, label in zip(boxes, labels):
         if label.item() == 0:
@@ -143,7 +157,7 @@ def create_centernet_targets(boxes, labels, output_h, output_w, device):
         
         reg_mask[cty_int, ctx_int] = 1
 
-    return hm, wh, offset, reg_mask
+    return hm, wh, offset, reg_mask, ignore_mask
 
 def draw_umich_gaussian(heatmap, center, radius, k=1):
     """Pomocnicza funkcja z oryginalnej implementacji CenterNetu do rysowania rozmycia Gaussa"""
@@ -180,7 +194,7 @@ def gaussian2D(shape, sigma=1):
     return h
 
 
-def focal_loss(pred, gt):
+def focal_loss(pred, gt, ignore_mask=None):
     """Zoptymalizowana Focal Loss dla oszacowywania map cieplnych z CenterNet"""
     pos_inds = gt.eq(1).float()
     neg_inds = gt.lt(1).float()
@@ -192,8 +206,13 @@ def focal_loss(pred, gt):
     pos_loss = torch.log(pred) * torch.pow(1 - pred, 2) * pos_inds
     # To samo, ale dla tła, a nie dla boxów. Tutaj karzemy mniej, bo mnożymy przez neg_weights
     neg_loss = torch.log(1 - pred) * torch.pow(pred, 2) * neg_weights * neg_inds
+    
+    if ignore_mask is not None:
+        ignore_mask = ignore_mask.unsqueeze(1).expand_as(pred)
+        pos_loss = pos_loss * ignore_mask
+        neg_loss = neg_loss * ignore_mask
 
-    num_pos = pos_inds.float().sum()
+    num_pos = (pos_inds.float() * (ignore_mask if ignore_mask is not None else 1.0)).sum()
     pos_loss = pos_loss.sum()
     neg_loss = neg_loss.sum()
 
